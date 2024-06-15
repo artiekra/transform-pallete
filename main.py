@@ -2,6 +2,7 @@
 
 import sys
 
+import numpy as np
 from PIL import Image
 from loguru import logger
 
@@ -16,7 +17,15 @@ def get_closest_pixel(pool: list[pixel], given: pixel) -> pixel:
     logger.trace("Given pixel <m>{}</>, pool <w>{}</>, finding closest..",
                  given, pool)
 
-    return (0, 0, 0)
+    # https://stackoverflow.com/questions/54242194/\
+    # find-the-closest-color-to-a-color-from-given-list-of-colors
+    colors = np.array(pool)
+    color = np.array(given)
+    distances = np.sqrt(np.sum((colors-color)**2,axis=1))
+    index_of_smallest = np.where(distances==np.amin(distances))
+
+    choice = list(index_of_smallest[0])[0]
+    return pool[choice]
 
 
 def main(args: dict) -> None:
@@ -37,6 +46,16 @@ def main(args: dict) -> None:
     image.save(args.get("output_path", "output.png"))
 
 
+def get_pool(pool_file: str) -> list[pixel]:
+    """Get list of colors (for the pool) from a file"""
+    logger.debug("Getting color pool from pool file")
+
+    with open(pool_file, "r", encoding="UTF-8") as file:
+        raw_colors = file.read().splitlines()
+
+    return [tuple(map(int, x.split())) for x in raw_colors]
+
+
 if __name__ == "__main__":
     logger.info("Starting the script..")
 
@@ -44,13 +63,15 @@ if __name__ == "__main__":
 
     try:
         image_path = sys.argv[1]
+        pool_path = sys.argv[2]
     except IndexError:
-        logger.error("Please specify image path, i.e. `py main.py image.png`")
+        logger.error("Please specify image and pool paths")
         sys.exit(1)
 
+    pool = get_pool(pool_path)
     args = {
         "image_path": image_path,
-        "pool": [1, 2]
+        "pool": pool
     }
     if output_path:
         args.update({"output_path": output_path})

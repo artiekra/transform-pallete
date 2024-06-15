@@ -1,6 +1,7 @@
 # Needed for testing
 image.png
 output.png
+pool
 
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
